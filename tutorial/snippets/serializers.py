@@ -1,12 +1,21 @@
 from django.forms import widgets
 from rest_framework import serializers
 from snippets.models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+from django.contrib.auth.models import User
+
+
+class UserSerializer(serializers.ModelSerializer):
+    snippets = serializers.PrimaryKeyRelatedField(many=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'snippets')
 
 
 class SnippetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Snippet
-        fields = ('id', 'title', 'code', 'linenos', 'language', 'style')
+        fields = ('id', 'title', 'code', 'linenos', 'language', 'style', 'owner')
 
     pk = serializers.Field()  # Note: `Field` is an untyped read-only field.
     title = serializers.CharField(required=False,
@@ -18,6 +27,7 @@ class SnippetSerializer(serializers.ModelSerializer):
                                        default='python')
     style = serializers.ChoiceField(choices=STYLE_CHOICES,
                                     default='friendly')
+    owner = serializers.Field(source='owner.username')
 
     def restore_object(self, attrs, instance=None):
         """
